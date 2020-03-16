@@ -5,6 +5,8 @@ const bodyParser  = require('body-parser');
 const fccTesting  = require('./freeCodeCamp/fcctesting.js');
 const session = require('express-session');
 const passport = require('passport');
+const ObjectID = require('mongodb').ObjectID;
+const mongo = require('mongodb').MongoClient;
 
 const app = express();
 
@@ -22,6 +24,20 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+/* Serialization of user objects */
+passport.serializeUser((user, done) => {
+  done(null, user._id);
+});
+
+passport.deserializeUser((id, done) => {
+  mongo.collection('users').findOne(
+    //{_id: new ObjectID(id)},
+    (err, done) => {
+      done(null, null);
+    }
+  );
+});
 
 app.route('/')
   .get((req, res) => {
