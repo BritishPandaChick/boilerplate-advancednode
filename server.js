@@ -25,26 +25,32 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-/* Serialization of user objects */
-passport.serializeUser((user, done) => {
-  done(null, user._id);
-});
+mongo.connect(process.env.DATABASE, (err, db) => {
+  if(err) {
+      console.log('Database error: ' + err);
+  } else {
+      console.log('Successful database connection');
 
-passport.deserializeUser((id, done) => {
-  mongo.collection('users').findOne(
-    //{_id: new ObjectID(id)},
-    (err, done) => {
-      done(null, null);
-    }
-  );
-});
+      passport.serializeUser((user, done) => {
+        done(null, user._id);
+      });
 
-app.route('/')
-  .get((req, res) => {
-    res.sendFile(process.cwd() + '/views/index.html');
-    res.render(process.cwd() + '/views/pug/index', {title: 'Hello', message: 'Please login'});
-  });
+      passport.deserializeUser( (id, done) => {
+          db.collection('users').findOne(
+              {_id: new ObjectID(id)},
+              (err, doc) => {
+                  done(null, doc);
+              }
+          );
+      });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Listening on port " + process.env.PORT);
+      app.route('/')
+        .get((req, res) => {
+          res.render(process.cwd() + '/views/pug/index', {title: 'Hello', message: 'Please login'});
+        });
+
+      app.listen(process.env.PORT || 3000, () => {
+        console.log("Listening on port " + process.env.PORT);
+      });  
+  }
 });
