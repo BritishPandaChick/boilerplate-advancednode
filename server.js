@@ -57,9 +57,16 @@ mongo.connect(process.env.DATABASE, (err, db) => {
         }
       ));
 
+      function ensureAuthenticated(req, res, next){
+        if (req.isAuthenticated()) {
+          return next();
+        }
+        res.redirect('/');
+      }
+
       app.route('/')
         .get((req, res) => {
-          res.render(process.cwd() + '/views/pug/index', {title: 'Hello', message: 'login', showLogin: true});
+          res.render(process.cwd() + '/views/pug/index', {title: 'Home page', message: 'login', showLogin: true});
         });
       
       app.route('/login')
@@ -68,7 +75,7 @@ mongo.connect(process.env.DATABASE, (err, db) => {
       });
 
       app.route('/profile')
-        .get((req, res) => {
+        .get(ensureAuthenticated, (req, res) => {
           res.render(process.cwd() + '/views/pug/profile');
       }); 
 
